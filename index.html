@@ -1,218 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AVL Tree Visualization</title>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <style>
-    svg {
-      margin-top: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL Tree Visualization</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        svg {
+            margin-top: 20px;
+            background-color: wheat;
+        }
+
+        body {
+            background-color: wheat;
+        }
+    </style>
 </head>
+
 <body>
 
-<div>
-  <label for="nodeInput">Enter nodes (space-separated):</label>
-  <input type="text" id="nodeInput">
-  <button onclick="animateInsert()">Insert Nodes</button>
-  <button onclick="resetSimulation()">Reset</button>
-</div>
+    <div style="background-color: lightblue; padding: 10px;">
+        <label for="nodeInput">Enter nodes (space-separated):</label>
+        <input type="text" id="nodeInput">
+        <button onclick="animateInsert()">Insert Nodes</button>
+        <button onclick="resetSimulation()">Reset</button>
+    </div>
 
-<svg width="800" height="600" id="avlTreeCanvas"></svg>
 
-<script>
-class AVLNode {
-  constructor(key) {
-    this.key = key;
-    this.left = null;
-    this.right = null;
-    this.height = 1;
-  }
-}
+    <svg width="800" height="600" id="avlTreeCanvas"></svg>
 
-class AVLTree {
-  constructor() {
-    this.root = null;
-    this.rotationHistory = [];
-  }
+    <script>
+        class AVLNode {
+            constructor(key) {
+                this.key = key;
+                this.left = null;
+                this.right = null;
+                this.height = 1;
+            }
+        }
 
-  height(node) {
-    return node ? node.height : 0;
-  }
+        class AVLTree {
+            constructor() {
+                this.root = null;
+                this.rotationHistory = [];
+            }
 
-  balance(node) {
-    return node ? this.height(node.left) - this.height(node.right) : 0;
-  }
+            height(node) {
+                return node ? node.height : 0;
+            }
 
-  updateHeight(node) {
-    if (node) {
-      node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
-    }
-  }
+            balance(node) {
+                return node ? this.height(node.left) - this.height(node.right) : 0;
+            }
 
-  rotateRight(y) {
-    const x = y.left;
-    const T2 = x.right;
+            updateHeight(node) {
+                if (node) {
+                    node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
+                }
+            }
 
-    x.right = y;
-    y.left = T2;
+            rotateRight(y) {
+                const x = y.left;
+                const T2 = x.right;
 
-    this.updateHeight(y);
-    this.updateHeight(x);
+                x.right = y;
+                y.left = T2;
 
-    return x;
-  }
+                this.updateHeight(y);
+                this.updateHeight(x);
 
-  rotateLeft(x) {
-    const y = x.right;
-    const T2 = y.left;
+                return x;
+            }
 
-    y.left = x;
-    x.right = T2;
+            rotateLeft(x) {
+                const y = x.right;
+                const T2 = y.left;
 
-    this.updateHeight(x);
-    this.updateHeight(y);
+                y.left = x;
+                x.right = T2;
 
-    return y;
-  }
+                this.updateHeight(x);
+                this.updateHeight(y);
 
-  insert(key) {
-    this.root = this._insert(this.root, key);
-  }
+                return y;
+            }
 
-  _insert(root, key) {
-    if (!root) {
-      return new AVLNode(key);
-    }
+            insert(key) {
+                this.root = this._insert(this.root, key);
+            }
 
-    if (key < root.key) {
-      root.left = this._insert(root.left, key);
-    } else if (key > root.key) {
-      root.right = this._insert(root.right, key);
-    } else {
-      return root;  // Duplicate keys are not allowed in AVL tree
-    }
+            _insert(root, key) {
+                if (!root) {
+                    return new AVLNode(key);
+                }
 
-    this.updateHeight(root);
+                if (key < root.key) {
+                    root.left = this._insert(root.left, key);
+                } else if (key > root.key) {
+                    root.right = this._insert(root.right, key);
+                } else {
+                    return root;  // Duplicate keys are not allowed in AVL tree
+                }
 
-    const balance = this.balance(root);
+                this.updateHeight(root);
 
-    if (balance > 1) {
-      if (key < root.left.key) {
-        return this.rotateRight(root);
-      } else {
-        root.left = this.rotateLeft(root.left);
-        return this.rotateRight(root);
-      }
-    }
+                const balance = this.balance(root);
 
-    if (balance < -1) {
-      if (key > root.right.key) {
-        return this.rotateLeft(root);
-      } else {
-        root.right = this.rotateRight(root.right);
-        return this.rotateLeft(root);
-      }
-    }
+                if (balance > 1) {
+                    if (key < root.left.key) {
+                        return this.rotateRight(root);
+                    } else {
+                        root.left = this.rotateLeft(root.left);
+                        return this.rotateRight(root);
+                    }
+                }
 
-    return root;
-  }
+                if (balance < -1) {
+                    if (key > root.right.key) {
+                        return this.rotateLeft(root);
+                    } else {
+                        root.right = this.rotateRight(root.right);
+                        return this.rotateLeft(root);
+                    }
+                }
 
-  getRotationHistory() {
-    return this.rotationHistory;
-  }
-}
+                return root;
+            }
 
-// Initialize AVL tree and SVG canvas
-const avlTree = new AVLTree();
-const svg = d3.select("#avlTreeCanvas");
+            getRotationHistory() {
+                return this.rotationHistory;
+            }
+        }
 
-function drawAVLTree(root, x, y, hDistance) {
-  if (root) {
-    drawNode(x, y, root.key);
-    if (root.left) {
-      drawLine(x, y, x - hDistance, y + 50);
-      drawAVLTree(root.left, x - hDistance, y + 50, hDistance / 2);
-    }
-    if (root.right) {
-      drawLine(x, y, x + hDistance, y + 50);
-      drawAVLTree(root.right, x + hDistance, y + 50, hDistance / 2);
-    }
-  }
-}
+        // Initialize AVL tree and SVG canvas
+        const avlTree = new AVLTree();
+        const svg = d3.select("#avlTreeCanvas");
 
-function drawNode(x, y, text) {
-  svg.append("circle")
-    .attr("cx", x)
-    .attr("cy", y)
-    .attr("r", 20)
-    .style("fill", "lightblue")
-    .style("stroke", "black");
+        function drawAVLTree(root, x, y, hDistance) {
+            if (root) {
+                drawNode(x, y, root.key);
+                if (root.left) {
+                    drawLine(x, y, x - hDistance, y + 50);
+                    drawAVLTree(root.left, x - hDistance, y + 50, hDistance / 2);
+                }
+                if (root.right) {
+                    drawLine(x, y, x + hDistance, y + 50);
+                    drawAVLTree(root.right, x + hDistance, y + 50, hDistance / 2);
+                }
+            }
+        }
 
-  svg.append("text")
-    .attr("x", x)
-    .attr("y", y)
-    .attr("dy", 5)
-    .attr("text-anchor", "middle")
-    .attr("font-family", "Arial")
-    .attr("font-size", 10)
-    .attr("font-weight", "bold")
-    .text(text);
-}
+        function drawNode(x, y, text) {
+            svg.append("circle")
+                .attr("cx", x)
+                .attr("cy", y)
+                .attr("r", 20)
+                .style("fill", "lightblue")
+                .style("stroke", "black");
 
-function drawLine(x1, y1, x2, y2) {
-  svg.append("line")
-    .attr("x1", x1)
-    .attr("y1", y1)
-    .attr("x2", x2)
-    .attr("y2", y2)
-    .attr("stroke", "black")
-    .attr("marker-end", "url(#arrow)");
-}
+            svg.append("text")
+                .attr("x", x)
+                .attr("y", y)
+                .attr("dy", 5)
+                .attr("text-anchor", "middle")
+                .attr("font-family", "Arial")
+                .attr("font-size", 15)
+                .attr("font-weight", "bold")
+                .text(text);
+        }
 
-function animateInsert() {
-  const input = document.getElementById("nodeInput").value;
-  const insertSequence = input.split(" ").map(Number);
+        function drawLine(x1, y1, x2, y2) {
+            svg.append("line")
+                .attr("x1", x1)
+                .attr("y1", y1)
+                .attr("x2", x2)
+                .attr("y2", y2)
+                .attr("stroke", "black")
+                .attr("marker-end", "url(#arrow)");
+        }
 
-  resetSVG();
+        function animateInsert() {
+            const input = document.getElementById("nodeInput").value;
+            const insertSequence = input.split(" ").map(Number);
 
-  let currentIdx = 0;
-  function insertStep() {
-    if (currentIdx < insertSequence.length) {
-      const key = insertSequence[currentIdx];
-      const rotated = avlTree.insert(key);
-      drawAVLTree(avlTree.root, 400, 50, 200);
-      updateRotationText(rotated);
-      currentIdx++;
-      setTimeout(insertStep, 1000);  // 1000 milliseconds (1 second) delay
-    }
-  }
+            resetSVG();
 
-  insertStep();
-}
+            let currentIdx = 0;
+            function insertStep() {
+                if (currentIdx < insertSequence.length) {
+                    const key = insertSequence[currentIdx];
+                    const rotated = avlTree.insert(key);
+                    drawAVLTree(avlTree.root, 400, 50, 200);
+                    updateRotationText(rotated);
+                    currentIdx++;
+                    setTimeout(insertStep, 1000);  // 1000 milliseconds (1 second) delay
+                }
+            }
 
-function updateRotationText(rotated) {
-  if (rotated) {
-    const rotationHistory = avlTree.getRotationHistory();
-    const rotationText = `Rotation History: ${rotationHistory.join(", ")}`;
-    d3.select("#rotationText").text(rotationText);
-  }
-}
+            insertStep();
+        }
 
-function resetSimulation() {
-  avlTree.root = null;
-  avlTree.rotationHistory = [];
-  resetSVG();
-  d3.select("#nodeInput").node().value = "";
-  d3.select("#rotationText").text("");
-}
+        function updateRotationText(rotated) {
+            if (rotated) {
+                const rotationHistory = avlTree.getRotationHistory();
+                const rotationText = `Rotation History: ${rotationHistory.join(", ")}`;
+                d3.select("#rotationText").text(rotationText);
+            }
+        }
 
-function resetSVG() {
-  svg.selectAll("*").remove();
-}
+        function resetSimulation() {
+            avlTree.root = null;
+            avlTree.rotationHistory = [];
+            resetSVG();
+            d3.select("#nodeInput").node().value = "";
+            d3.select("#rotationText").text("");
+        }
 
-</script>
+        function resetSVG() {
+            svg.selectAll("*").remove();
+        }
+
+    </script>
+
+    <style>
+        .footer {
+            background: linear-gradient(to right, #38b2ac, #7f3c96);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: #f0f0f0;
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        .footer .logo {
+            width: 50px;
+            height: auto;
+            margin-bottom: 10px;
+            transition: transform 0.3s;
+        }
+
+        .footer .logo:hover {
+            box-shadow: 0px .5rem 2rem rgba(0, 0, 0, .75);
+            transform: scale(1.1);
+        }
+
+        .footer .social {
+            margin: 10px;
+        }
+
+        .footer .social img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            margin: 0 5px;
+        }
+
+        .footer .social img:hover {
+            transform: scale(1.1);
+        }
+
+        @media only screen and (max-width: 600px) {
+            .footer {
+                padding: 10px;
+            }
+
+            .footer .social img {
+                width: 28px;
+                height: 28px;
+            }
+        }
+    </style>
+
+    <footer class="footer">
+        <img src="logo-s.png" alt="Logo" class="logo">
+        <p><a href="https://soumya-chakraborty.github.io/PortfolioV2/">Made by Soumya Chakraborty</a></p>
+        <p><a href="mailto:soumyachakraborty198181@gmail.com">soumyachakraborty198181@gmail.com</a></p>
+        <div class="social">
+        </p>
+        <div class="social">
+            <a href="https://codepen.io/Soumya-Chakraborty" target="blank"><img align="center"
+                    src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/codepen.svg"
+                    alt="https://codepen.io/Soumya-Chakraborty" height="30" width="40" /></a>
+            <a href="https://www.linkedin.com/in/soumya-chakraborty-943299260/" target="blank"><img align="center"
+                    src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/linked-in-alt.svg"
+                    alt="in/soumya-chakraborty-943299260" height="30" width="40" /></a>
+            <a href="https://www.facebook.com/profile.php?id=100089264288424&mibextid=ZbWKwL" target="blank"><img
+                    align="center"
+                    src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/facebook.svg"
+                    alt="https://www.facebook.com/profile.php?id=100089264288424&mibextid=zbwkwl" height="30"
+                    width="40" /></a>
+            <a href="https://instagram.com/soumya_ckakraborty?igshid=zddkntzintm=" target="blank"><img align="center"
+                    src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/instagram.svg"
+                    alt="https://instagram.com/soumya_ckakraborty?igshid=zddkntzintm=" height="30" width="40" /></a>
+            <a href="https://www.codechef.com/users/soumyachakraborty" target="blank"><img align="center"
+                    src="https://cdn.jsdelivr.net/npm/simple-icons@3.1.0/icons/codechef.svg" alt="soumyachakraborty"
+                    height="30" width="40" /></a>
+            <a href="https://www.hackerrank.com/soumyachakrabor3?hr_r=1" target="blank"><img align="center"
+                    src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/hackerrank.svg"
+                    alt="soumyachakraborty" height="30" width="40" /></a>
+            <a href="https://www.leetcode.com/soumyachakraborty" target="blank"><img align="center"
+                    src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/leet-code.svg"
+                    alt="soumyachakraborty" height="30" width="40" /></a>
+            </p>
+        </div>
+    </footer>
+
 </body>
+
 </html>
