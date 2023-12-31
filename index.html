@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVL Tree Visualization</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <style>
+    svg {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div>
+  <label for="nodeInput">Enter nodes (space-separated):</label>
+  <input type="text" id="nodeInput">
+  <button onclick="animateInsert()">Insert Nodes</button>
+  <button onclick="resetSimulation()">Reset</button>
+</div>
+
+<svg width="800" height="600" id="avlTreeCanvas"></svg>
+
+<script>
+class AVLNode {
+  constructor(key) {
+    this.key = key;
+    this.left = null;
+    this.right = null;
+    this.height = 1;
+  }
+}
+
+class AVLTree {
+  constructor() {
+    this.root = null;
+    this.rotationHistory = [];
+  }
+
+  height(node) {
+    return node ? node.height : 0;
+  }
+
+  balance(node) {
+    return node ? this.height(node.left) - this.height(node.right) : 0;
+  }
+
+  updateHeight(node) {
+    if (node) {
+      node.height = 1 + Math.max(this.height(node.left), this.height(node.right));
+    }
+  }
+
+  rotateRight(y) {
+    const x = y.left;
+    const T2 = x.right;
+
+    x.right = y;
+    y.left = T2;
+
+    this.updateHeight(y);
+    this.updateHeight(x);
+
+    return x;
+  }
+
+  rotateLeft(x) {
+    const y = x.right;
+    const T2 = y.left;
+
+    y.left = x;
+    x.right = T2;
+
+    this.updateHeight(x);
+    this.updateHeight(y);
+
+    return y;
+  }
+
+  insert(key) {
+    this.root = this._insert(this.root, key);
+  }
+
+  _insert(root, key) {
+    if (!root) {
+      return new AVLNode(key);
+    }
+
+    if (key < root.key) {
+      root.left = this._insert(root.left, key);
+    } else if (key > root.key) {
+      root.right = this._insert(root.right, key);
+    } else {
+      return root;  // Duplicate keys are not allowed in AVL tree
+    }
+
+    this.updateHeight(root);
+
+    const balance = this.balance(root);
+
+    if (balance > 1) {
+      if (key < root.left.key) {
+        return this.rotateRight(root);
+      } else {
+        root.left = this.rotateLeft(root.left);
+        return this.rotateRight(root);
+      }
+    }
+
+    if (balance < -1) {
+      if (key > root.right.key) {
+        return this.rotateLeft(root);
+      } else {
+        root.right = this.rotateRight(root.right);
+        return this.rotateLeft(root);
+      }
+    }
+
+    return root;
+  }
+
+  getRotationHistory() {
+    return this.rotationHistory;
+  }
+}
+
+// Initialize AVL tree and SVG canvas
+const avlTree = new AVLTree();
+const svg = d3.select("#avlTreeCanvas");
+
+function drawAVLTree(root, x, y, hDistance) {
+  if (root) {
+    drawNode(x, y, root.key);
+    if (root.left) {
+      drawLine(x, y, x - hDistance, y + 50);
+      drawAVLTree(root.left, x - hDistance, y + 50, hDistance / 2);
+    }
+    if (root.right) {
+      drawLine(x, y, x + hDistance, y + 50);
+      drawAVLTree(root.right, x + hDistance, y + 50, hDistance / 2);
+    }
+  }
+}
+
+function drawNode(x, y, text) {
+  svg.append("circle")
+    .attr("cx", x)
+    .attr("cy", y)
+    .attr("r", 20)
+    .style("fill", "lightblue")
+    .style("stroke", "black");
+
+  svg.append("text")
+    .attr("x", x)
+    .attr("y", y)
+    .attr("dy", 5)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "Arial")
+    .attr("font-size", 10)
+    .attr("font-weight", "bold")
+    .text(text);
+}
+
+function drawLine(x1, y1, x2, y2) {
+  svg.append("line")
+    .attr("x1", x1)
+    .attr("y1", y1)
+    .attr("x2", x2)
+    .attr("y2", y2)
+    .attr("stroke", "black")
+    .attr("marker-end", "url(#arrow)");
+}
+
+function animateInsert() {
+  const input = document.getElementById("nodeInput").value;
+  const insertSequence = input.split(" ").map(Number);
+
+  resetSVG();
+
+  let currentIdx = 0;
+  function insertStep() {
+    if (currentIdx < insertSequence.length) {
+      const key = insertSequence[currentIdx];
+      const rotated = avlTree.insert(key);
+      drawAVLTree(avlTree.root, 400, 50, 200);
+      updateRotationText(rotated);
+      currentIdx++;
+      setTimeout(insertStep, 1000);  // 1000 milliseconds (1 second) delay
+    }
+  }
+
+  insertStep();
+}
+
+function updateRotationText(rotated) {
+  if (rotated) {
+    const rotationHistory = avlTree.getRotationHistory();
+    const rotationText = `Rotation History: ${rotationHistory.join(", ")}`;
+    d3.select("#rotationText").text(rotationText);
+  }
+}
+
+function resetSimulation() {
+  avlTree.root = null;
+  avlTree.rotationHistory = [];
+  resetSVG();
+  d3.select("#nodeInput").node().value = "";
+  d3.select("#rotationText").text("");
+}
+
+function resetSVG() {
+  svg.selectAll("*").remove();
+}
+
+</script>
+</body>
+</html>
